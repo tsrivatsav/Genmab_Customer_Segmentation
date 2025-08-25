@@ -24,3 +24,12 @@ override.tf.json
 # CLI configuration files
 .terraformrc
 terraform.rc
+
+# Python cache files + Large files
+lambda_package/
+genmab_genai_env/
+results/
+Reviews.csv
+model.safetensors
+model.tar.gz
+deployment_package.zip
