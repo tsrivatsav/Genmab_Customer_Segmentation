@@ -1,3 +1,8 @@
+# Create an ECR repository to store the container image
+resource "aws_ecr_repository" "lambda_repo" {
+  name = "${var.project_name}-summarizer-repo"
+}
+
 # IAM Role for the Lambda Function
 resource "aws_iam_role" "lambda_exec_role" {
   name = "${var.project_name}-lambda-api-role"
@@ -19,13 +24,12 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 
 # Define the Lambda Function Resource
 resource "aws_lambda_function" "generative_ai_lambda" {
-  filename         = "../gen_ai_api/deployment_package.zip"
+  package_type     = "Image"
+  image_uri        = "${aws_ecr_repository.lambda_repo.repository_url}:latest"
   function_name    = "${var.project_name}-summarizer-api"
   role             = aws_iam_role.lambda_exec_role.arn
-  handler          = "lambda_function.lambda_handler"
-  runtime          = "python3.10"
   timeout          = 900  
-  memory_size      = 1024 
+  memory_size      = 2048 
 }
 
 # Define the API Gateway (HTTP API)
