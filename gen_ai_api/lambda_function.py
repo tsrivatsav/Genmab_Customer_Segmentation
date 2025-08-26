@@ -1,36 +1,47 @@
+import os
+import boto3
 import json
-from transformers import pipeline
 
-# Load the model. This will download the model the first time the Lambda is run.
-# For production, you would package the model with your deployment.
-summarizer = pipeline("summarization", model="t5-small")
+# Get the SageMaker endpoint name from an environment variable
+ENDPOINT_NAME = os.environ['SAGEMAKER_ENDPOINT_NAME']
+
+# Create a boto3 client for the SageMaker runtime
+sagemaker_runtime = boto3.client('sagemaker-runtime')
 
 def lambda_handler(event, context):
-    """
-    This function takes a text input and returns a summary.
-    """
     try:
-        # The input text will be passed in the 'body' of the API Gateway event
+        # Get the input text from the API Gateway event
         body = json.loads(event.get("body", "{}"))
         input_text = body.get("text")
 
         if not input_text:
             return {
-                "statusCode": 400,
-                "body": json.dumps({"error": "No text provided for summarization."})
+                'statusCode': 400,
+                'body': json.dumps({'error': 'No text provided.'})
             }
 
-        # Generate the summary
-        summary = summarizer(input_text, max_length=100, min_length=30, do_sample=False)
-        
+        # The payload must be a JSON string, then encoded to bytes
+        payload = json.dumps({'text': input_text})
+
+        # Invoke the SageMaker endpoint
+        response = sagemaker_runtime.invoke_endpoint(
+            EndpointName=ENDPOINT_NAME,
+            ContentType='application/json',
+            Body=payload
+        )
+
+        # The response body from SageMaker is a streaming object, so we read and decode it
+        result = response['Body'].read().decode('utf-8')
+
         return {
-            "statusCode": 200,
-            "body": json.dumps(summary[0])
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': result # The result from SageMaker is already a JSON string
         }
 
     except Exception as e:
         print(f"Error: {e}")
         return {
-            "statusCode": 500,
-            "body": json.dumps({"error": "An error occurred during processing."})
+            'statusCode': 500,
+            'body': json.dumps({'error': 'An internal server error occurred.'})
         }

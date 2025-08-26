@@ -77,7 +77,7 @@ resource "aws_sagemaker_endpoint" "segmentation_endpoint" {
 }
 
 # =======================================================
-# TASK 3: Generative AI Endpoint
+# TASK 3: GenAI Summarization Endpoint
 # =======================================================
 
 resource "aws_sagemaker_model" "genai_model" {
@@ -91,7 +91,7 @@ resource "aws_sagemaker_model" "genai_model" {
       SAGEMAKER_SUBMIT_DIRECTORY = var.genai_model_data_path
     }
   }
-  tags = { Task = "Generative AI" }
+  tags = { Task = "Summarization" }
   depends_on = [
     aws_iam_role_policy_attachment.sagemaker_policy_attach,
     aws_iam_role_policy_attachment.s3_full_access_attach,
@@ -104,13 +104,13 @@ resource "aws_sagemaker_endpoint_configuration" "genai_endpoint_config" {
     variant_name = "AllTraffic"
     model_name = aws_sagemaker_model.genai_model.name
     initial_instance_count = 1
-    instance_type = "ml.t2.medium"
+    instance_type = "ml.t2.medium" 
   }
-  tags = { Task = "Generative AI" }
+  tags = { Task = "Summarization" }
 }
 
 resource "aws_sagemaker_endpoint" "genai_endpoint" {
   name = "${var.project_name}-genai-endpoint"
   endpoint_config_name = aws_sagemaker_endpoint_configuration.genai_endpoint_config.name
-  tags = { Task = "Generative AI" }
+  tags = { Task = "Summarization" }
 }

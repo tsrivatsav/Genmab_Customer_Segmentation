@@ -27,6 +27,7 @@ terraform.rc
 
 # Python cache files + Large files
 lambda_package/
+model_package/
 genmab_genai_env/
 results/
 Reviews.csv
